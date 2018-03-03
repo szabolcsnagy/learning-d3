@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Barchart example</title>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <style>
+    .bar{
+      height: 1rem;
+      background-color: teal;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bar Charts</h1>
+  <h2>Pre-Defined Markup</h2>
+  <p>defined the number of divs to the number of data points. This is very rarely a viable solution.</p>
+  <div id="chart">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+
+  <script>
+    var data = [90,70,50,30,10]
+    d3.select('#chart')
+      .selectAll('div')
+      .data(data)
+      .attr('class','bar')
+      .style('width',function(d){
+        return d + 'px';
+      }); 
+  </script>
+</body>
+</html>
