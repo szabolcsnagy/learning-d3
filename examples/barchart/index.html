@@ -17,7 +17,10 @@
 <body>
   <h1>Bar Charts</h1>
   <h2>Pre-Defined Markup</h2>
-  <p>defined the number of divs to the number of data points. This is very rarely a viable solution.</p>
+  <p>Defined the number of divs to match the number of data points. 
+    First, the chart container and the data point DOM elements need to be selected.
+    D3's data() api call will join the data point with the selected DOM elements. 
+    This is very rarely a viable solution. </p>
   <div id="chart">
     <div></div>
     <div></div>
@@ -36,5 +39,103 @@
         return d + 'px';
       }); 
   </script>
+
+  <h2>Using the enter selection</h2>
+  <p>Usually, only a container element is defined in the mark up and the generation of the DOM elements are driven by the data points. Hence the name Data Driven Documents.</p>
+  <p>The DOM selection for the data points returns empty as the initial markup only have the container element for the chart.
+    The .data() api call then can not map the data to the DOM. But D3 gives you access to the DOM selection that will be used for rendering the data. This is called the <em>enter selection</em>.
+    The .enter() selection can be used to add markup for each data point.</p>
+  <div id="chart2"></div>
+
+  <script>
+    var data = [90,70,50,30,10]
+    d3.select('#chart2')
+      .selectAll('div')
+      .data(data)
+      .enter().append('div')
+      .attr('class','bar')
+      .style('width',function(d){
+        return d + 'px';
+      }); 
+  </script>
+
+<h2>Dynamic Chart #1</h2>
+<p>In the naive version the render function will remove the DOM elements from the chart when a dataset has changed and rebuild them from scratch.</p>
+<div id="chart3"></div>
+<button onclick="renderDynamic1('math')">Math</button>
+<button onclick="renderDynamic1('science')">Science</button>
+<script>
+  var dyndata = [
+  { name: 'Alice', math: 93, science: 84 },
+  { name: 'Bobby', math: 81, science: 97 },
+  { name: 'Carol', math: 74, science: 88 },
+  { name: 'David', math: 64, science: 76 },
+  { name: 'Emily', math: 80, science: 94 }
+  ];
+
+  function renderDynamic1(subject){
+    // remove the current content of the chart
+    d3.select('#chart3')
+      .selectAll('div')
+      .remove();
+
+    // recreate the chart with the new data point
+    d3.select('#chart3')
+      .selectAll('div')
+      .data(dyndata)
+      .enter().append('div')
+      .attr('class','bar')
+      .style('width',function(d){return d[subject] + 'px';})
+  }
+
+  // init
+  renderDynamic1('math');
+</script>
+
+
+<h2>Dynamic Chart #2</h2>
+<p>Much better to reuse the DOM elements by binding them to a key in the dataset. The .data() function's second parameter takes the a callback to defines what should be the key.</p>
+<p>That callback provides 3 parameters (1) current datum, that is the data structure from the input data, (2) index of said data sturcture and (3) a list of DOM nodes from the selectAll call or the original data points array.</p>
+<div id="chart4"></div>
+<button onclick="renderDynamic2('math')">Math</button>
+<button onclick="renderDynamic2('science')">Science</button>
+<script>
+  var dyndata2 = [
+  { name: 'Alice', math: 93, science: 84 },
+  { name: 'Bobby', math: 81, science: 97 },
+  { name: 'Carol', math: 74, science: 88 },
+  { name: 'David', math: 64, science: 76 },
+  { name: 'Emily', math: 80, science: 94 }
+  ];
+
+  function renderDynamic2(subject){
+    
+    // store a reference to the bar that is already on the chart
+    var bars = d3.select('#chart4')
+      .selectAll('div') // first time empty, next time the previous dataset
+      .data(dyndata2,function(d,index,nodes){ 
+        // return the key
+        return d.name; 
+      });
+    console.log('bars',bars);
+
+    // create new bars for data element that has no DOM element
+    var newBars = bars
+      .enter().append('div')  // add DOM node in the enter selection if not exists
+      .attr('class','bar')    // operations on that DOM node
+      .style('width','1px'); // set initial width to 1
+    console.log('newBars',newBars);
+    
+    // combine the selections of new and existing bars
+    newBars.merge(bars)
+      .transition() // animate the width
+      .style('width',function(d){return d[subject] + 'px';})
+  }
+
+  // init
+  renderDynamic2('math');
+</script>
+
+
 </body>
 </html>
