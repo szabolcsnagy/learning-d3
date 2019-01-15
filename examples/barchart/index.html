@@ -10,7 +10,14 @@
     .bar{
       height: 1rem;
       background-color: teal;
-      margin-bottom: 0.5rem;
+      /* margin-bottom: 0.5rem; */
+      border-top: 1px solid white;
+      box-sizing: border-box;
+    
+    }
+    .bars{
+      margin-left: 50px;
+      margin-top: 6px;
     }
   </style>
 </head>
@@ -61,6 +68,8 @@
 
 <h2>Dynamic Chart #1</h2>
 <p>In the naive version the render function will remove the DOM elements from the chart when a dataset has changed and rebuild them from scratch.</p>
+
+
 <div id="chart3"></div>
 <button onclick="renderDynamic1('math')">Math</button>
 <button onclick="renderDynamic1('science')">Science</button>
@@ -134,6 +143,101 @@
 
   // init
   renderDynamic2('math');
+</script>
+
+
+<h2>Raising the bar aka. scaling our chart</h2>
+<p>In previous examples the datapoints directly applied to the width CSS property. In practice that only works with a limit set of data points (positive integers) because the CSS width  property can not be negative. </p>
+<h3>Couple gottchas </h3>
+<ul>
+  <li>use box-sizing: border-box on the bars so it doesn't strech beyond the space the scale calculated for it. </li>
+  <li>the axes are SVG overlays and absolutely positioned. Make sure its container is relatively positioned.</li>
+  <li>think about svg groups as divs in html and use transform property and transition() function to position them.</li>
+  <li>the margin has to be taken off when the scales are created</li>
+</ul>
+<div id="chart5" style="position:relative;"> <div class="bars"></div> </div>
+
+<br>
+<br>
+<button onclick="renderDynamic3('math')">Math</button>
+<button onclick="renderDynamic3('science')">Science</button>
+<script>
+  var dyndata3 = [
+  { name: 'Alice', math: 93, science: 84 },
+  { name: 'Bobby', math: 81, science: 97 },
+  { name: 'Carol', math: 74, science: 88 },
+  { name: 'David', math: 64, science: 76 },
+  { name: 'Emily', math: 80, science: 100 }
+  ];
+  
+  // we know most of the space we need is below and to the left of the chart
+  const margin = { top: 10, right: 10, bottom: 20, left: 50 }
+  const chartWidth = 600; // - margin.left - margin.right;
+  const chartHeight = 400;// - margin.top - margin.bottom;
+  // xScale will map the datapoints to the chart with
+  const xScale = d3.scaleLinear().domain([0,100]).range([0,chartWidth - margin.left - margin.right ]);
+    // yScale will divide the space vertically and calculate each bar height 
+  const yScale = d3.scaleBand().domain(dyndata3.map(function(d){return d.name;})).range([0,(chartHeight - margin.top - margin.bottom)]);
+
+  function addAxis(){
+    const svg = d3.select('#chart5')
+      .append('svg')
+      .attr('width',chartWidth )
+      .attr('height',chartHeight)
+      .style('position','absolute')
+      .style('top',(margin.top * -1.0) + 'px')
+      ;
+  
+    // const axesContainer = svg.append("g").attr('transform',`translate(${margin.left},${margin.top})`);
+    const axesContainer = svg.append("g").attr('transform',`translate(${margin.left},${margin.top})`);
+    // build the axies; call is to enable chain operation on a selection
+    axesContainer.append("g")
+      .attr('transform',`translate(0, ${chartHeight - margin.top - margin.bottom})`) // to position SVG parts the transform attribute need to be set
+      .call( d3.axisBottom(xScale) ) // build a bottom axis; since xScale knows the data and the dimention needed for the axis
+      
+    axesContainer.append("g")
+      .attr('transform','translate(0,0)')
+      .call( d3.axisLeft(yScale) )
+      ;
+  }
+
+  function renderDynamic3(subject){
+    
+    
+    // bars representing the enter selection
+    // store a reference to the bar that is already on the chart
+    var bars = d3.select('#chart5 .bars')
+      .style('width',chartWidth + 'px')
+      .style('height',(chartHeight - margin.top - margin.bottom) + 'px')
+      .selectAll('div') // first time empty, next time the previous dataset
+      .data(dyndata3,function(d,index,nodes){ 
+        // return the key
+        return d.name; 
+      });
+    console.log('bars',bars);
+
+    // newBars representing the update selection
+    // create new bars for data element that has no DOM element
+    var newBars = bars
+      .enter().append('div')  // add DOM node in the enter selection if not exists
+      .attr('class','bar')    // operations on that DOM node
+      .style('width','1px'); // set initial width to 1
+    console.log('newBars',newBars);
+    
+    // apply the transitions to both the enter and the update selection
+    // combine the selections of new and existing bars
+    newBars.merge(bars)
+      .transition() // animate the width
+      .style('width',function(d){return xScale(d[subject]) + 'px';})
+      .style('height',function(d){return yScale.bandwidth() + 'px';});
+    
+    
+  }
+
+  // init
+  addAxis();
+  renderDynamic3('math');
+  
 </script>
 
 
