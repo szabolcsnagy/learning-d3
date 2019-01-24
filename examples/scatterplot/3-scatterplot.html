@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    .labels{
+      font-family: sans-serif;
+      fill: teal;
+
+    }
+  </style>
+</head>
+<body>
+  <h1>Using Date Scale with Scatterplot</h1>
+  <h2>Highlights</h2>
+  <ul>
+    <li>We better preceive the data if the circles area correspond to the data values.</li>
+    <li>Before I used a simplified equation to calculate the radius from the area <strong>r=Math.sqrt(dataValue)</strong></li>
+    <li>In this example I will use the Square Root Scale to calculate the circle's radius</li>
+    <li>The xScale is a Date scale. The dates in the dataset needs to be converted to Date objects <strong>d3.timeParse('%m/%d/%y')</strong> will return a parser function. </li>
+    <li>With the text label the <strong>d3.timeFormat('%b %d')</strong> will help us. It returns a formatter function that takes a date object and returns a formatted string.</li>
+  </ul>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    var dataset = [
+                  [ '01/01/17',   20 ],
+                  [ '02/10/17',   90  ],
+                  [ '03/03/17',   50 ],
+                  [ '04/20/17',   33 ],
+                  [ '05/05/17',   95 ],
+                  [ '06/17/17',   12 ],
+                  [ '07/01/17',   44 ],
+                  [ '08/23/17',   67 ],
+                  [ '09/23/17',   21 ],
+                  [ '10/01/17',   88 ],
+                  [ '11/01/17',  150],
+                  [ '12/01/17',  150]
+                  
+              ];
+    
+    let SVGWIDTH = 600;
+    let SVGHEIGHT = 350;
+    const PADDING = 30;
+    // convert the string dates to date objects
+
+    // The IMPORTANT PART to turn string dates into Date objects
+    const timeParser = d3.timeParse('%m/%d/%y');
+
+    // The IMPORTANT PART for the labels
+    const timeFormatter = d3.timeFormat('%b %d');
+
+    // go through dataset and convert the date string to actual date objects.
+    for (var i in dataset) {
+      
+      var t = dataset[i];
+      // console.log(i,t,timeParser(t[0]));
+      t[0] = timeParser(t[0]);
+      dataset[i] = t; 
+    }
+
+    // determine the rage we need on the X-axis
+    const minX = d3.min(dataset,(d) => d[0]);
+    const maxX = d3.max(dataset, (d) => d[0]); 
+
+    const minY = d3.min(dataset, (d) => d[1]);
+    const maxY = d3.max(dataset, (d) => d[1]);
+    
+    // create the scales for the positions as well as the circles
+    const scaleX = d3.scaleTime().domain([minX,maxX]).rangeRound([PADDING*3,SVGWIDTH-PADDING*3]);
+    const scaleY = d3.scaleLinear().domain([minY,maxY]).rangeRound([SVGHEIGHT-PADDING, PADDING]);
+    const scaleR = d3.scaleSqrt()
+                      .domain([0,maxY])
+                      .range([2,6])
+    
+
+    d3.select('body')
+      .append('svg')
+        .attr('width',SVGWIDTH)
+        .attr('height',SVGHEIGHT)
+        .selectAll('circle')
+        .data(dataset)
+        .enter()
+        .append('circle')
+          .attr('cx', (d,i) => scaleX(d[0]))
+          .attr('cy',(d,i)=> scaleY(d[1])) // Since SVG coordinate system has zero at the top flip the Y positions 
+          .attr('r',(A) => {
+            return scaleR(A[1]);
+          });
+
+    d3.select('svg')
+        .selectAll('text')
+        .data(dataset)
+        .enter()
+        .append('text')
+        .text((d)=> `${timeFormatter(d[0])}, ${d[1]}`)
+        .attr('x',(d,i) => scaleX(d[0]))
+        .attr('y',(d,i)=> scaleY(d[1]))
+        .classed('labels',true);
+
+    
+  </script>
+
+  
+</body>
+</html>
