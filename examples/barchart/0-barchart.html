@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    .bar {
+      fill: tan;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple Bar Chart</h1>
+  <h2>Highlight</h2>
+  <ul>
+    <li>Uses band scale to divide the spaces horizontaly </li>
+    <li>Using 'g' elements to group the graph and the axis.</li>
+    <li>A single group element contains the entire graph. 
+      That group element is translated by margin.left and margin.top.</li>
+  </ul>
+  
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    const SVGHEIGHT = 300;
+    const SVGWIDTH = 600;
+    const margin = {top:20, right:20, bottom:20, left:40};
+    const innerWidth = SVGWIDTH - margin.left - margin.right;
+    const innerHeight = SVGHEIGHT - margin.top - margin.bottom;
+    const dataset = [12,34,23,25,87,56,90,100,67,44,56,7,88,43]
+    const yScale = d3.scaleLinear()
+      .domain([0,d3.max(dataset)])
+      .rangeRound([innerHeight,10])
+
+    const xScale = d3.scaleBand()
+      .domain(d3.range(dataset.length))
+      .rangeRound([0,innerWidth])
+      .paddingInner(0.05); // padding  between bars in percentage
+
+    const xAxis = d3.axisBottom().scale(xScale);
+    const yAxis = d3.axisLeft().scale(yScale).ticks(5);
+
+    // create SVG
+    const svg = d3.select('body').append('svg').attr('width',SVGWIDTH)
+      .attr('height',SVGHEIGHT);
+    // define main container and translate it by top and left margin
+    const mainCont = svg.append('g').attr('class','main')
+    mainCont
+      .attr('width',innerWidth)
+      .attr('height',innerHeight)
+      .attr('transform',`translate(${margin.left},${margin.top})`)
+
+    // draw the bars
+    mainCont.selectAll('rect')
+        .data(dataset)
+        .enter()
+        .append('rect')
+        .classed('bar',true)
+        .attr('height', (d) => innerHeight - yScale(d))
+        .attr('y', (d)=>  yScale(d))
+        .attr('x',(d,i) => xScale(i))
+        .attr('width', (d,i) => xScale.bandwidth());
+    
+    // add labels
+    mainCont.selectAll('text')
+      .data(dataset)
+      .enter()
+      .append('text')
+      .text((d)=>d)
+      .attr('x',(d,i) => Math.round(xScale(i) + xScale.bandwidth()/2) )
+      .attr('y',(d,i) => yScale(d))
+
+    // create g for axes
+    const bottomAxisCont = mainCont.append('g').classed('xAxis',true);
+    const leftAxisCont = mainCont.append('g').classed('yAxis',true);
+    // draw axes with the call function that will call the parameter function
+    bottomAxisCont.call(xAxis).attr('transform',`translate(0,${innerHeight})`);
+    leftAxisCont.call(yAxis);
+
+  </script>
+</body>
+</html>
