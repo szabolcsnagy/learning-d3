@@ -1,0 +1,14 @@
+
+body {
+  font-family: sans-serif;
+  background-color: beige;
+  line-height: 2rem
+}
+
+.layout {
+  max-width: 100%;
+  padding: 1rem;
+}
+
+
+
