@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    .labels{
+      font-family: sans-serif;
+      fill: teal;
+
+    }
+  </style>
+</head>
+<body>
+  <h1>Adding Clip Path to the Chart Area</h1>
+  <h2>Highlights</h2>
+  <ul>
+    <li>Some of the data points cut into the axis. To limit the drawing to the chart area a clip path can be added that act like a mask over the chart area. </li>
+    <li><strong>&lt;clipPath&gt;</strong> is an SVG tag that has no visual representation. You should give an ID to this tag and inside of it define the shape of the mask. In this example the mask is a rectangle.</li>
+    <li>Once the clip path is defined select the group element of the chart area and add the attribute <strong>clip-path="url(#clipPathID)"</strong>.</li>
+  </ul>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    var dataset = [
+                  [ '01/01/17',   20 ],
+                  [ '02/10/17',   90  ],
+                  [ '03/03/17',   50 ],
+                  [ '04/20/17',   33 ],
+                  [ '05/05/17',   95 ],
+                  [ '06/17/17',   12 ],
+                  [ '07/01/17',   44 ],
+                  [ '08/23/17',   67 ],
+                  [ '09/23/17',   21 ],
+                  [ '10/01/17',   88 ],
+                  [ '11/01/17',  150],
+                  [ '12/01/17',  150]
+                  
+              ];
+    
+    let SVGWIDTH = 800;
+    let SVGHEIGHT = 350;
+    
+    // The IMPORTANT PART to turn string dates into Date objects
+    const timeParser = d3.timeParse('%m/%d/%y');
+
+    // The IMPORTANT PART for the labels
+    const timeFormatter = d3.timeFormat('%b %d');
+
+    // go through dataset and convert the date string to actual date objects.
+    for (var i in dataset) {
+      var t = dataset[i];
+      t[0] = timeParser(t[0]);
+      dataset[i] = t; 
+    }
+
+    // determine the rage we need on the X-axis
+    const minX = d3.min(dataset,(d) => d[0]);
+    const maxX = d3.max(dataset, (d) => d[0]); 
+
+    const minY = d3.min(dataset, (d) => d[1]);
+    const maxY = d3.max(dataset, (d) => d[1]);
+
+    const margin= {top:20,right:40,bottom:20,left:40};
+    const chartAreaWidth = SVGWIDTH - (margin.left + margin.right);
+    const chartAreaHeight = SVGHEIGHT - (margin.top + margin.bottom);
+    const svg = d3.select('body').append('svg')
+                  .attr('width',SVGWIDTH)
+                  .attr('height',SVGHEIGHT);
+
+    // create the scales for the positions as well as the circles
+    const scaleX = d3.scaleTime().domain([minX,maxX]).rangeRound([0,chartAreaWidth]);
+    const scaleY = d3.scaleLinear().domain([minY,maxY]).rangeRound([chartAreaHeight, 0]);
+    const scaleR = d3.scaleSqrt()
+                      .domain([0,maxY])
+                      .range([5,9]);
+
+    const chartArea = svg.append('g').classed('chart-area',true);
+    // create axis
+    const xAxis = d3.axisBottom().scale(scaleX);
+    const xAxisContainer = svg.append('g').classed('axis',true)
+      .attr('transform',`translate(${margin.left},${margin.top + chartAreaHeight})`);
+
+    const yAxis = d3.axisLeft().scale(scaleY).ticks(5);
+    const yAxisContainer = svg.append('g').classed('axis',true)
+      .attr('transform',`translate(${margin.left},${margin.top })`);
+
+    // add a mask over the chart area. Drawings are not cutting into the axis.
+    const clipPath = svg.append('clipPath').attr('id','chartAreaMask');
+    // define the shape of the clipPath
+    clipPath.append('rect')
+      .attr('width',chartAreaWidth)
+      .attr('height',chartAreaHeight);
+
+    // appling clipPath on the chart area
+    chartArea.attr('clip-path','url(#chartAreaMask)');
+
+
+    chartArea
+        .attr('width',chartAreaWidth)
+        .attr('height',chartAreaHeight)
+        .attr('transform',`translate(${margin.left},${margin.top})`)
+        .selectAll('circle')
+        .data(dataset)
+        .enter()
+        .append('circle')
+          .attr('cx', (d,i) => scaleX(d[0]))
+          .attr('cy',(d,i)=> scaleY(d[1])) // Since SVG coordinate system has zero at the top flip the Y positions 
+          .attr('r',(A) => {
+            return scaleR(A[1]);
+          });
+
+    chartArea
+        .selectAll('text')
+        .data(dataset)
+        .enter()
+        .append('text')
+        .text((d)=> `${timeFormatter(d[0])}, ${d[1]}`)
+        .attr('x',(d,i) => scaleX(d[0]) +15 )
+        .attr('y',(d,i)=> scaleY(d[1]))
+        .classed('labels',true);
+
+    // render the axises
+    xAxisContainer.call(xAxis);
+    yAxisContainer.call(yAxis);
+  </script>
+
+  
+</body>
+</html>
