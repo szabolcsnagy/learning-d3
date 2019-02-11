@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>Adding Clip Path to the Chart Area</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
   <style>
     .labels{
       font-family: sans-serif;
@@ -14,13 +15,16 @@
   </style>
 </head>
 <body>
-  <h1>Adding Clip Path to the Chart Area</h1>
-  <h2>Highlights</h2>
-  <ul>
-    <li>Some of the data points cut into the axis. To limit the drawing to the chart area a clip path can be added that act like a mask over the chart area. </li>
-    <li><strong>&lt;clipPath&gt;</strong> is an SVG tag that has no visual representation. You should give an ID to this tag and inside of it define the shape of the mask. In this example the mask is a rectangle.</li>
-    <li>Once the clip path is defined select the group element of the chart area and add the attribute <strong>clip-path="url(#clipPathID)"</strong>.</li>
-  </ul>
+  <div class="layout">
+      <h1>Adding Clip Path to the Chart Area</h1>
+      <h2>Highlights</h2>
+      <ul>
+        <li>Some of the data points cut into the axis. To limit the drawing to the chart area a clip path can be added that act like a mask over the chart area. </li>
+        <li><strong>&lt;clipPath&gt;</strong> is an SVG tag that has no visual representation. You should give an ID to this tag and inside of it define the shape of the mask. In this example the mask is a rectangle.</li>
+        <li>Once the clip path is defined select the group element of the chart area and add the attribute <strong>clip-path="url(#clipPathID)"</strong>.</li>
+      </ul>
+  </div>
+  
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script>
     var dataset = [
@@ -65,9 +69,9 @@
     const margin= {top:20,right:40,bottom:20,left:40};
     const chartAreaWidth = SVGWIDTH - (margin.left + margin.right);
     const chartAreaHeight = SVGHEIGHT - (margin.top + margin.bottom);
-    const svg = d3.select('body').append('svg')
-                  .attr('width',SVGWIDTH)
-                  .attr('height',SVGHEIGHT);
+    const svg = d3.select('.layout').append('svg')
+                  .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+                  .attr('width','100%');
 
     // create the scales for the positions as well as the circles
     const scaleX = d3.scaleTime().domain([minX,maxX]).rangeRound([0,chartAreaWidth]);
