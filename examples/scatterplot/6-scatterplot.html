@@ -26,16 +26,20 @@
   </style>
 </head>
 <body>
-  <h1>Transitions Basics</h1>
-  <h2>Highlights</h2>
   
-  <ul>
-    <li>A new transition can be initiated with the <strong><a href="https://github.com/d3/d3-transition">transtion()</a></strong> function. </li>
-    <li>After the transition() function was called the <strong>duration(time_in_ms)</strong> determines the length of the transition. </li>
-    <li>The <strong><a href="https://github.com/d3/d3-ease">ease()</a></strong> functions controls how the transition is performed. See the documention for the available easing options.</li>
-    <li><strong>delay()</strong> function can add some time before the transition is performed. </li>
-    <li>When a new dataset is generated the y scale needs to be recalibrated as the input domain's minimum and maximum range could have changed. Upon updates the y axis needs to be redrawn to show the new range.</li>
-  </ul>
+  <div class="layout">
+    <h1>Transitions Basics</h1>
+    <h2>Highlights</h2>
+  
+    <ul>
+      <li>A new transition can be initiated with the <strong><a href="https://github.com/d3/d3-transition">transtion()</a></strong> function. </li>
+      <li>After the transition() function was called the <strong>duration(time_in_ms)</strong> determines the length of the transition. </li>
+      <li>The <strong><a href="https://github.com/d3/d3-ease">ease()</a></strong> functions controls how the transition is performed. See the documention for the available easing options.</li>
+      <li><strong>delay()</strong> function can add some time before the transition is performed. </li>
+      <li>When a new dataset is generated the y scale needs to be recalibrated as the input domain's minimum and maximum range could have changed. Upon updates the y axis needs to be redrawn to show the new range.</li>
+    </ul>
+
+  </div>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script>
     // chart properties
@@ -93,7 +97,11 @@
     
 
     function setupSVG (width, height) {
-      return d3.select('body').append('svg').attr('width',width).attr('height',height);
+      return d3.select('.layout')
+        .append('svg')
+          .attr('class','chart')
+          .attr('viewBox',`0 0 ${width} ${height}`)
+          .attr('width',width);
     }
 
     function updateChart (dataset) {

@@ -14,4 +14,7 @@ p {
   font-size: 1.125rem;
 }
 
+.layout svg.chart {
+  max-width: 100%;
+}
 
