@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Transitions Basics</title>
+  <link rel="stylesheet" href="../../css/styles.css">
+  <style>
+
+    .chartArea circle {
+      fill: skyblue;
+    }
+
+    .axis {
+      stroke: purple;;
+      font-size: 1.125rem;
+    }
+    button {
+      display: block;
+      font-size: 1.25rem;
+      padding: 1rem;
+      margin-left: 2.5rem;
+      border-radius: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Transitions Basics</h1>
+  <h2>Highlights</h2>
+  
+  <ul>
+    <li>A new transition can be initiated with the <strong><a href="https://github.com/d3/d3-transition">transtion()</a></strong> function. </li>
+    <li>After the transition() function was called the <strong>duration(time_in_ms)</strong> determines the length of the transition. </li>
+    <li>The <strong><a href="https://github.com/d3/d3-ease">ease()</a></strong> functions controls how the transition is performed. See the documention for the available easing options.</li>
+    <li><strong>delay()</strong> function can add some time before the transition is performed. </li>
+    <li>When a new dataset is generated the y scale needs to be recalibrated as the input domain's minimum and maximum range could have changed. Upon updates the y axis needs to be redrawn to show the new range.</li>
+  </ul>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    // chart properties
+    const DATAPOINTS = 10;
+    const SVGWIDTH = 700;
+    const SVGHEIGHT = 400;
+    const margin = {top:20, right: 40, bottom: 40, left: 40};
+    const chartInnerWidth = SVGWIDTH - (margin.left + margin.right);
+    const chartInnerHeight = SVGHEIGHT - (margin.top + margin.bottom);
+    const SVG = setupSVG(SVGWIDTH,SVGHEIGHT);
+    const chartArea = SVG.append('g')
+                        .classed('chartArea',true)
+                        .attr('transform',`translate(${margin.left},${margin.top})`)
+                        .attr('width',chartInnerWidth)
+                        .attr('height',chartInnerHeight);
+
+    let chartData = getData(DATAPOINTS);
+    // setup the scales
+    const scaleX = d3.scaleLinear().domain([d3.min(chartData,(d)=>d[0]), d3.max(chartData,(d)=>d[0])]).rangeRound([0,chartInnerWidth]);
+    const scaleY = d3.scaleLinear().domain([d3.min(chartData,(d)=>d[1]), d3.max(chartData,(d)=>d[1])]).rangeRound([chartInnerHeight,0]);
+    const scaleR = d3.scaleSqrt().domain([d3.min(chartData,(d)=>d[1]), d3.max(chartData,(d)=>d[1])]).rangeRound([10,15]);
+    // setup axis
+    const xAxis = d3.axisBottom().scale(scaleX);
+    const yAxis = d3.axisRight().scale(scaleY);
+
+    // draw axis
+    SVG.append('g')
+      .attr('class','x axis')
+      .attr('transform',`translate(${margin.left},${margin.top + chartInnerHeight})`)
+      .call(xAxis);
+    
+    SVG.append('g')
+      .attr('class','y axis')
+      .attr('transform',`translate(${margin.left + chartInnerWidth},${margin.top})`)
+      .call(yAxis);
+    
+    // draw the chart
+    chartArea.selectAll('circle')
+              .data(chartData)
+              .enter()
+              .append('circle')
+              .attr('cx',d=>scaleX(d[0]))
+              .attr('cy',d=>scaleY(d[1]))
+              .attr('r',d=>scaleR(d[1]))
+
+
+    // random data generator
+    function getData (points,upperLimit=100) {
+      const result = [];
+      for(let i = 0; i < points; i++) {
+        result.push( [i*10,Math.ceil(Math.random() * upperLimit)] );
+      }
+      return result;
+    } 
+    
+
+    function setupSVG (width, height) {
+      return d3.select('body').append('svg').attr('width',width).attr('height',height);
+    }
+
+    function updateChart (dataset) {
+      
+      // recalibrate the Y scale
+      scaleY.domain([d3.min(dataset,(d)=>d[1]), d3.max(dataset,(d)=>d[1])]);
+      // update the data bound to the DOM
+      chartArea.selectAll('circle')
+        .data(dataset) 
+        .transition()
+        .duration(1000) // control for the time of transition.
+        .ease(d3.easeCubicInOut) // how the transition moves
+        .delay(300)
+        .attr('cx',d=>scaleX(d[0]))
+        .attr('cy',d=>scaleY(d[1]))
+        .attr('r',d=>scaleR(d[1]))
+    }
+
+    function updateAxis () {
+      // because the scale is updated we just need to redraw the yAxis
+      SVG.select('.y.axis').call(yAxis)
+    }
+
+
+    function init () {
+      function changeHandler () {
+          const newDataset = getData(DATAPOINTS);
+          updateChart(newDataset);
+          updateAxis();
+        }
+      // add a button
+      d3.select('body').append('button')
+        .text('Change Dataset')
+        .on('click',changeHandler);
+    }
+
+    init();
+  </script>
+
+  
+</body>
+</html>
