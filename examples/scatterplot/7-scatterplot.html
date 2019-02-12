@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Adding New Data Points</title>
+  <link rel="stylesheet" href="../../css/styles.css">
+  <style>
+
+    .chartArea circle {
+      fill: skyblue;
+    }
+
+    .axis {
+      stroke: purple;;
+      font-size: 1.125rem;
+    }
+    button {
+      display: block;
+      font-size: 1.25rem;
+      padding: 1rem;
+      margin-left: 2.5rem;
+      border-radius: 2rem;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="layout">
+    <h1>Adding New Data Points</h1>
+    <h2>Highlights</h2>
+    <p>In this example couple data points are randomly generated and new data points introduced with the button at the top.</p>
+    <ul>
+      <li>First create couple of radom data points for the chart and draw the initial chart.</li>
+      <li>When the button is pressed a random data point is appended to the chartData array.</li>
+      <li>The new data array will be mapped to the current cicle objects in the chart area. The data() function there returns an update selection that contains all the DOM elements that just had some data bound. 
+        The update selection has a reference to the enter selection that is the group of DOM elements need to be added to accomodate the extra data points.  </li>
+      <li>Using the enter selection the new circle is created outside of the chart area. I didn't apply the clip path so the new element can be seen.</li>
+      <li>Once the new element is created the update selection and the enter selection is merged. This is needed because all elements has to transition into a new place when the newly added item moves into the chart area. </li>
+
+    </ul>
+
+  </div>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    
+    // random data generator
+    function getData (points,upperLimit=100) {
+      const result = [];
+      for(let i = 0; i < points; i++) {
+        result.push( [i*10,Math.ceil(Math.random() * upperLimit)] );
+      }
+      return result;
+    } 
+    
+
+    function setupSVG (width, height) {
+      return d3.select('.layout')
+        .append('svg')
+          .attr('class','chart')
+          .attr('viewBox',`0 0 ${width} ${height}`)
+          .attr('width',width);
+    }
+
+
+
+
+    function init (container) {
+      // chart properties
+      const DATAPOINTS = 3;
+      const margin = {top:20, right: 40, bottom: 40, left: 40};
+      const chartInnerWidth = SVGWIDTH - (margin.left + margin.right);
+      const chartInnerHeight = SVGHEIGHT - (margin.top + margin.bottom);
+     
+      const chartArea = container.append('g')
+                          .classed('chartArea',true)
+                          .attr('transform',`translate(${margin.left},${margin.top})`)
+                          .attr('width',chartInnerWidth)
+                          .attr('height',chartInnerHeight);
+      let chartData = getData(DATAPOINTS);
+      // setup the scales
+      const scaleX = d3.scaleLinear().domain([d3.min(chartData,(d)=>d[0]), d3.max(chartData,(d)=>d[0])]).rangeRound([0,chartInnerWidth]);
+      const scaleY = d3.scaleLinear().domain([d3.min(chartData,(d)=>d[1]), d3.max(chartData,(d)=>d[1])]).rangeRound([chartInnerHeight,0]);
+      const scaleR = d3.scaleSqrt().domain([d3.min(chartData,(d)=>d[1]), d3.max(chartData,(d)=>d[1])]).rangeRound([10,15]);
+      // setup axis
+      const xAxis = d3.axisBottom().scale(scaleX);
+      const yAxis = d3.axisRight().scale(scaleY);
+
+      function createChart (dataset) {
+        // draw the chart
+        chartArea.selectAll('circle')
+                  .data(dataset)    
+                  .enter()
+                  .append('circle')
+                  .attr('cx',d=>scaleX(d[0]))
+                  .attr('cy',d=>scaleY(d[1]))
+                  .attr('r',d=>scaleR(d[1]));
+      }
+    
+
+      function updateAxis () {
+        // because the scale is updated we just need to redraw the yAxis
+        SVG.select('.y.axis').call(yAxis);
+        SVG.select('.x.axis').call(xAxis);
+      }
+
+      function createAxes (SVG) {
+        // draw axis
+        SVG.append('g')
+          .attr('class','x axis')
+          .attr('transform',`translate(${margin.left},${margin.top + chartInnerHeight})`)
+          .call(xAxis);
+        
+        SVG.append('g')
+          .attr('class','y axis')
+          .attr('transform',`translate(${margin.left + chartInnerWidth},${margin.top})`)
+          .call(yAxis);
+      }
+
+     
+
+      function addDataHandler () {
+        // create a new element at the end
+        chartData.push([chartData.length * 10, Math.floor(Math.random() * 100)]);
+        
+        // let the scales know avbout the new data
+        scaleX.domain([d3.min(chartData,(d)=>d[0]), d3.max(chartData,(d)=>d[0])]);
+        scaleY.domain([d3.min(chartData,(d)=>d[1]), d3.max(chartData,(d)=>d[1])]);
+        scaleR.domain([d3.min(chartData,(d)=>d[1]), d3.max(chartData,(d)=>d[1])]);
+        updateAxis();
+
+        // create a new circle just outside of the chartInnerWidth
+        let updateSelection = container.select('.chartArea')
+          .selectAll('circle')
+          .data(chartData); // <-- mapping all the data
+        
+        
+        const enterSelection = updateSelection.enter();
+        // now only operate on the enter selection
+        enterSelection.append('circle')
+          .attr('cx',chartInnerWidth + 20) // <-- moving it outside of the visible area
+          .attr('cy',d=>scaleY(d[1]))
+          .attr('r',d=>scaleR(d[1]))
+        .merge(updateSelection) // <-- merge the update selection back with the enter selection
+        .transition()
+        .duration(1000)
+        .attr('cx',(d)=> scaleX(d[0]));
+      }
+      
+
+      // create initial chart
+      createChart(chartData);
+      createAxes(container);
+
+      // add a button
+      d3.select('body').append('button')
+        .text('Add New Data Point')
+        .on('click',addDataHandler);
+    }
+
+
+
+    const SVGWIDTH = 700;
+    const SVGHEIGHT = 400;
+    const SVG = setupSVG(SVGWIDTH,SVGHEIGHT);
+    init(SVG);
+  </script>
+
+  
+</body>
+</html>
