@@ -4,23 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>Simple Bar Chart</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
   <style>
     .bar {
-      fill: tan;
+      fill: skyblue;
     }
   </style>
 </head>
 <body>
-  <h1>Simple Bar Chart</h1>
-  <h2>Highlights</h2>
-  <ul>
-    <li>Uses band scale to divide the spaces horizontaly </li>
-    <li>Using 'g' elements to group the graph and the axis.</li>
-    <li>A single group element contains the entire graph. 
-      That group element is translated by margin.left and margin.top.</li>
-  </ul>
-  
+  <div class="layout">
+    <h1>Simple Bar Chart</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>Uses band scale to divide the spaces horizontaly </li>
+      <li>Using 'g' elements to group the graph and the axis.</li>
+      <li>A single group element contains the entire graph. 
+        That group element is translated by margin.left and margin.top.</li>
+    </ul>
+  </div>
+
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script>
     const SVGHEIGHT = 300;
@@ -42,8 +45,11 @@
     const yAxis = d3.axisLeft().scale(yScale).ticks(5);
 
     // create SVG
-    const svg = d3.select('body').append('svg').attr('width',SVGWIDTH)
-      .attr('height',SVGHEIGHT);
+    const svg = d3.select('.layout')
+      .append('svg')
+      .attr('class','chart')
+      .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+      .attr('width','100%');
     // define main container and translate it by top and left margin
     const mainCont = svg.append('g').attr('class','main')
     mainCont
