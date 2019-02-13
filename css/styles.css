@@ -18,3 +18,7 @@ p {
   max-width: 100%;
 }
 
+.chart {
+  border: 1px solid black;
+}
+

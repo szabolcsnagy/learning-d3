@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>Simple Scatterplot</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
   <style>
     .labels{
       font-family: sans-serif;
@@ -14,21 +15,25 @@
   </style>
 </head>
 <body>
-  <h1>Simple Scatterplot</h1>
-  <h2>Highlights</h2>
-  <ul>
-    <li>The dataset is a 2 dimensional array as each data point is an x,y coordinate pair.</li>
-    <li>Is skews the visualization if the y values are mapped to the radius of the circles.
-      It is better perceived to make the circle's area to correspond to the data values instead of the radius. 
-      To draw a circle that's area is reflecting the corresponding data value requires a bit of math.
-      <strong>r = Math.sqrt(dataValue / Math.PI)</strong>
-    </li>
-    
-    <li>
-      When the radius is calcuated you don't need to stick to the exact math. 
-      An arbitrary calculation can be used as long as the relative areas are corresponding to the data.
-    </li>
-  </ul>
+  <div class="layout">
+      
+    <h1>Simple Scatterplot</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>The dataset is a 2 dimensional array as each data point is an x,y coordinate pair.</li>
+      <li>Is skews the visualization if the y values are mapped to the radius of the circles.
+        It is better perceived to make the circle's area to correspond to the data values instead of the radius. 
+        To draw a circle that's area is reflecting the corresponding data value requires a bit of math.
+        <strong>r = Math.sqrt(dataValue / Math.PI)</strong>
+      </li>
+      
+      <li>
+        When the radius is calcuated you don't need to stick to the exact math. 
+        An arbitrary calculation can be used as long as the relative areas are corresponding to the data.
+      </li>
+    </ul>
+
+  </div>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script>
     var dataset = [
@@ -47,10 +52,10 @@
     let SVGWIDTH = 600;
     let SVGHEIGHT = 150;
 
-    d3.select('body')
+    d3.select('.layout')
       .append('svg')
-        .attr('width',SVGWIDTH)
-        .attr('height',SVGHEIGHT)
+        .attr('width','100%')
+        .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
         .selectAll('circle')
         .data(dataset)
         .enter()
@@ -67,13 +72,14 @@
             });
 
     d3.select('svg')
+        .attr('class','chart')
         .selectAll('text')
         .data(dataset)
         .enter()
         .append('text')
         .text((d)=> `${d[0]}, ${d[1]}`)
         .attr('x',(d,i) => d[0])
-        .attr('y',(d,i)=> SVGHEIGHT - d[1])
+        .attr('y',(d,i)=> SVGHEIGHT - d[1] -10)
         .classed('labels',true);
   </script>
 </body>

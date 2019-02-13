@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>Using Square Root Scale with Scatterplot</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
   <style>
     .labels{
       font-family: sans-serif;
@@ -13,14 +14,16 @@
   </style>
 </head>
 <body>
-  <h1>Using Square Root Scale with Scatterplot</h1>
-  <h2>Highlights</h2>
-  <ul>
-    <li>We better preceive data if the circles <strong>area</strong> correspond to the data values. 
-      To draw the circles we need to calculate the radius from the area.
-      A square root scale does just that. It doesn't use the exact math for circles but our goal is that the relative size of the circles reflect the differences among data points.  </li>
-    
-  </ul>
+  <div class="layout">  
+    <h1>Using Square Root Scale with Scatterplot</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>We better preceive data if the circles <strong>area</strong> correspond to the data values. 
+        To draw the circles we need to calculate the radius from the area.
+        A square root scale does just that. It doesn't use the exact math for circles but our goal is that the relative size of the circles reflect the differences among data points.  </li>
+      
+    </ul>
+  </div>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script>
     var dataset = [
@@ -57,10 +60,10 @@
                       .range([3,10])
                       .clamp(true); // forces the outliars not to go through the maximum range. Otherwise there would be a giant circle.
 
-    d3.select('body')
+    d3.select('.layout')
       .append('svg')
-        .attr('width',SVGWIDTH)
-        .attr('height',SVGHEIGHT)
+        .attr('width','100%')
+        .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
         .selectAll('circle')
         .data(dataset)
         .enter()

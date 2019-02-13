@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>Adding Axes</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
   <style>
     .labels{
       font-family: sans-serif;
@@ -14,18 +15,20 @@
   </style>
 </head>
 <body>
-  <h1>Adding Axes to Scatterplots</h1>
-  <h2>Highlights</h2>
-  <ul>
-    <li>Axis are visual representation of scales.</li>
-    <li>There are 4 different axis constructors in d3. d3.axisBottom(), d3.axisTop(), d3.axisLeft(), d3.axisRight()
-      These functions create the SVG visual representation of a scale so at minimum they need a scale to work.
-    </li>
-    <li>It is recommended to create a group element for each axis as they consist of many SVG tags. Groups allow us to format them as one object.</li>
-    <li>To make space for the axis it is recommended to define an margin and put the chart elements into a separate group that is translated by the margin.</li>
-    <li>The axis contructors create a function that needs to be called with the DOM element that will house the axis. </li>
+  <div class="layout">
+    <h1>Adding Axes to Scatterplots</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>Axis are visual representation of scales.</li>
+      <li>There are 4 different axis constructors in d3. d3.axisBottom(), d3.axisTop(), d3.axisLeft(), d3.axisRight()
+        These functions create the SVG visual representation of a scale so at minimum they need a scale to work.
+      </li>
+      <li>It is recommended to create a group element for each axis as they consist of many SVG tags. Groups allow us to format them as one object.</li>
+      <li>To make space for the axis it is recommended to define an margin and put the chart elements into a separate group that is translated by the margin.</li>
+      <li>The axis contructors create a function that needs to be called with the DOM element that will house the axis. </li>
 
-  </ul>
+    </ul>
+  </div>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script>
     var dataset = [
@@ -80,9 +83,10 @@
     const margin= {top:20,right:40,bottom:20,left:40};
     const chartAreaWidth = SVGWIDTH - (margin.left + margin.right);
     const chartAreaHeight = SVGHEIGHT - (margin.top + margin.bottom);
-    const svg = d3.select('body').append('svg')
-                  .attr('width',SVGWIDTH)
-                  .attr('height',SVGHEIGHT);
+    const svg = d3.select('.layout').append('svg')
+                  .attr('width','100%')
+                  .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`);
+
 
     // create the scales for the positions as well as the circles
     const scaleX = d3.scaleTime().domain([minX,maxX]).rangeRound([0,chartAreaWidth]);

@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>Using Date Scale with Scatterplot</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
   <style>
     .labels{
       font-family: sans-serif;
@@ -14,15 +15,19 @@
   </style>
 </head>
 <body>
-  <h1>Using Date Scale with Scatterplot</h1>
-  <h2>Highlights</h2>
-  <ul>
-    <li>We better preceive the data if the circles area correspond to the data values.</li>
-    <li>Before I used a simplified equation to calculate the radius from the area <strong>r=Math.sqrt(dataValue)</strong></li>
-    <li>In this example I will use the Square Root Scale to calculate the circle's radius</li>
-    <li>The xScale is a Date scale. The dates in the dataset needs to be converted to Date objects <strong>d3.timeParse('%m/%d/%y')</strong> will return a parser function. </li>
-    <li>With the text label the <strong>d3.timeFormat('%b %d')</strong> will help us. It returns a formatter function that takes a date object and returns a formatted string.</li>
-  </ul>
+  <div class="layout">
+
+    
+    <h1>Using Date Scale with Scatterplot</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>We better preceive the data if the circles area correspond to the data values.</li>
+      <li>Before I used a simplified equation to calculate the radius from the area <strong>r=Math.sqrt(dataValue)</strong></li>
+      <li>In this example I will use the Square Root Scale to calculate the circle's radius</li>
+      <li>The xScale is a Date scale. The dates in the dataset needs to be converted to Date objects <strong>d3.timeParse('%m/%d/%y')</strong> will return a parser function. </li>
+      <li>With the text label the <strong>d3.timeFormat('%b %d')</strong> will help us. It returns a formatter function that takes a date object and returns a formatted string.</li>
+    </ul>
+  </div>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script>
     var dataset = [
@@ -36,7 +41,7 @@
                   [ '08/23/17',   67 ],
                   [ '09/23/17',   21 ],
                   [ '10/01/17',   88 ],
-                  [ '11/01/17',  150],
+                  [ '11/01/17',  120],
                   [ '12/01/17',  150]
                   
               ];
@@ -76,16 +81,16 @@
                       .range([2,6])
     
 
-    d3.select('body')
+    d3.select('.layout')
       .append('svg')
-        .attr('width',SVGWIDTH)
-        .attr('height',SVGHEIGHT)
+        .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+        .attr('width','100%')
         .selectAll('circle')
         .data(dataset)
         .enter()
         .append('circle')
-          .attr('cx', (d,i) => scaleX(d[0]))
-          .attr('cy',(d,i)=> scaleY(d[1])) // Since SVG coordinate system has zero at the top flip the Y positions 
+          .attr('cx', (d,i) => scaleX(d[0]) + 15 )
+          .attr('cy',(d,i)=> scaleY(d[1]) +8 ) // Since SVG coordinate system has zero at the top flip the Y positions 
           .attr('r',(A) => {
             return scaleR(A[1]);
           });

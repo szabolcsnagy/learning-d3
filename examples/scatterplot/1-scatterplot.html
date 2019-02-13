@@ -4,47 +4,51 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>Using Scales Basics</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
   <style>
     .labels{
       font-family: sans-serif;
       fill: teal;
-
     }
+
+    
   </style>
 </head>
 <body>
-  <h1>Scaled Simple Scatterplot</h1>
-  <h2>Highlights</h2>
-  <ul>
-    <li>The dataset is a 2 dimensional array as each data point has an x,y</li>
-    <li>It is better to make the circle's area to correspond to the data values instead of the radius. This require a little bit of calculation as we can set only the radius on the SVG element.
-      The scatterplot will show the y coordinates as data values. 
-    </li>
-    <li>
-      When the radius is calcuated you don't need to stick to the exact math. 
-      An arbitrary calculation can be used as long as the relative areas are reflecting the differences in the data.
-    </li>
-    <li>
-      Scales will normalize the <strong>input data/domain</strong> and map it to  <strong>output range</strong>, that is the available pixels.
-    </li>
-    <li>
-      When you create the scale for the Y coordinates you need to take into the account that SVG 0,0 point is in the upper corner causes the smaller values to be displayed closer to the top. <br>
-      A useful trick to flip the output range from  [0, SVGHEIGHT] to [SVGHEIGHT, 0]. 
-    </li>
-    <li>
-      It is a good idea to define some padding around the chart so text labels are not cut.
-    </li>
-    <li>
-      Dealing with outliars: 
-      By Default a scale will return a scaled value for a data point that is outside of the input domain producing an output value that is outside of the output range. 
-      On both plots the scale's input domain is limited to [0..100] and the dataset contains 360 as an input value. 
-      The first plot shows the default behaviour producing a circle that is outside of the output domain. 
-      On the second plot the <strong>clamp(true)</strong> function limits the circle size to the maximum of the output range.
-    </li>
-  </ul>
+  <div class="layout">
 
+    <h1>Using Scales Basics</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>The dataset is a 2 dimensional array as each data point has an x,y</li>
+      <li>It is better to make the circle's area to correspond to the data values instead of the radius. This require a little bit of calculation as we can set only the radius on the SVG element.
+        The scatterplot will show the y coordinates as data values. 
+      </li>
+      <li>
+        When the radius is calcuated you don't need to stick to the exact math. 
+        An arbitrary calculation can be used as long as the relative areas are reflecting the differences in the data.
+      </li>
+      <li>
+        Scales will normalize the <strong>input data/domain</strong> and map it to  <strong>output range</strong>, that is the available pixels.
+      </li>
+      <li>
+        When you create the scale for the Y coordinates you need to take into the account that SVG 0,0 point is in the upper corner causes the smaller values to be displayed closer to the top. <br>
+        A useful trick to flip the output range from  [0, SVGHEIGHT] to [SVGHEIGHT, 0]. 
+      </li>
+      <li>
+        It is a good idea to define some padding around the chart so text labels are not cut.
+      </li>
+      <li>
+        Dealing with outliars: 
+        By Default a scale will return a scaled value for a data point that is outside of the input domain producing an output value that is outside of the output range. 
+        On both plots the scale's input domain is limited to [0..100] and the dataset contains 360 as an input value. 
+        The first plot shows the default behaviour producing a circle that is outside of the output domain. 
+        On the second plot the <strong>clamp(true)</strong> function limits the circle size to the maximum of the output range.
+      </li>
+    </ul>
 
+  </div>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script>
     var dataset = [
@@ -82,10 +86,11 @@
                         .range([2,5])
                         .clamp(clamp); // forces the outliars not to go through the maximum range. Otherwise there would be a giant circle.
 
-      const svg = d3.select('body').append('svg');
+      const svg = d3.select('.layout').append('svg');
         svg
-          .attr('width',SVGWIDTH)
-          .attr('height',SVGHEIGHT)
+          .attr('width','49%')
+          .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+          .attr('class','chart')
           .selectAll('circle')
           .data(dataset)
           .enter()
