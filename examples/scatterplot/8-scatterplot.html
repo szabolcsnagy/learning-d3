@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Removing Values and Elements</title>
+  <link rel="stylesheet" href="../../css/styles.css">
+  <style>
+
+    .chartArea circle {
+      fill: skyblue;
+    }
+
+    .axis {
+      stroke: purple;;
+      font-size: 1.125rem;
+    }
+    button {
+      display: block;
+      font-size: 1.25rem;
+      padding: 1rem;
+      margin-left: 2.5rem;
+      border-radius: 2rem;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="layout">
+    <h1>Removing Values and Elements</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>The randomly generated data points can be removed by the click  of the button.</li>
+      <li>The first data point is shifted out from the chartData array and the remaining data is re-mapped to the existing DOM elements.</li>
+      <li>Since there is one more DOM elements than data points the <strong>exit()</strong> selection will contain that element. </li>
+      <li>Finally, the extra element is transitioned outside of the chart area and removed from the DOM.</li>
+      
+    </ul>
+
+  </div>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    
+    // random data generator
+    function getData (points,upperLimit=100) {
+      const result = [];
+      for(let i = 0; i < points; i++) {
+        result.push( [i*10,Math.ceil(Math.random() * upperLimit)] );
+      }
+      return result;
+    } 
+    
+
+    function setupSVG (width, height) {
+      return d3.select('.layout')
+        .append('svg')
+          .attr('class','chart')
+          .attr('viewBox',`0 0 ${width} ${height}`)
+          .attr('width',width);
+    }
+
+
+
+
+    function init (container) {
+      // chart properties
+      const DATAPOINTS = 10;
+      const margin = {top:20, right: 40, bottom: 40, left: 40};
+      const chartInnerWidth = SVGWIDTH - (margin.left + margin.right);
+      const chartInnerHeight = SVGHEIGHT - (margin.top + margin.bottom);
+     
+      const chartArea = container.append('g')
+                          .classed('chartArea',true)
+                          .attr('transform',`translate(${margin.left},${margin.top})`)
+                          .attr('width',chartInnerWidth)
+                          .attr('height',chartInnerHeight);
+      let chartData = getData(DATAPOINTS);
+      // setup the scales
+      const scaleX = d3.scaleLinear().domain([d3.min(chartData,(d)=>d[0]), d3.max(chartData,(d)=>d[0])]).rangeRound([0,chartInnerWidth]);
+      const scaleY = d3.scaleLinear().domain([d3.min(chartData,(d)=>d[1]), d3.max(chartData,(d)=>d[1])]).rangeRound([chartInnerHeight,0]);
+      const scaleR = d3.scaleSqrt().domain([d3.min(chartData,(d)=>d[1]), d3.max(chartData,(d)=>d[1])]).rangeRound([10,15]);
+      // setup axis
+      const xAxis = d3.axisBottom().scale(scaleX);
+      const yAxis = d3.axisRight().scale(scaleY);
+
+      function createChart (dataset) {
+        // draw the chart
+        chartArea.selectAll('circle')
+                  .data(dataset)    
+                  .enter()
+                  .append('circle')
+                  .attr('cx',d=>scaleX(d[0]))
+                  .attr('cy',d=>scaleY(d[1]))
+                  .attr('r',d=>scaleR(d[1]));
+      }
+    
+
+      function updateAxis () {
+        // because the scale is updated we just need to redraw the yAxis
+        SVG.select('.y.axis').call(yAxis);
+        SVG.select('.x.axis').call(xAxis);
+      }
+
+      function createAxes (SVG) {
+        // draw axis
+        SVG.append('g')
+          .attr('class','x axis')
+          .attr('transform',`translate(${margin.left},${margin.top + chartInnerHeight})`)
+          .call(xAxis);
+        
+        SVG.append('g')
+          .attr('class','y axis')
+          .attr('transform',`translate(${margin.left + chartInnerWidth},${margin.top})`)
+          .call(yAxis);
+      }
+
+      function removeDataHandler () {
+        chartData.shift();
+        console.log(chartData, chartData.length);
+        const updateSelection = chartArea.selectAll('circle').data(chartData);
+        const exitSelection = updateSelection.exit();
+        exitSelection
+          .transition()
+          .duration(1000)
+          .attr('cx',chartInnerWidth)
+          .remove();
+      }
+      // create initial chart
+      createChart(chartData);
+      createAxes(container);
+
+      // add a button
+      d3.select('body').append('button')
+        .text('Remove the first data point')
+        .on('click',removeDataHandler);
+    }
+
+
+
+    const SVGWIDTH = 700;
+    const SVGHEIGHT = 400;
+    const SVG = setupSVG(SVGWIDTH,SVGHEIGHT);
+    init(SVG);
+  </script>
+
+  
+</body>
+</html>
