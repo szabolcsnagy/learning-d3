@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Adding and Removing Data Points</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
+  <style>
+    .bar {
+      fill: skyblue;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <h1>Adding and Removing Data Points</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>Using keys to map data points to DOM elements for data consistency. </li>
+      <li>One handler takes care of the removal and adding datapoints. </li>
+    </ul>
+  </div>
+
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    const SVGHEIGHT = 300;
+    const SVGWIDTH = 600;
+    const DATAPOINTS = 10;
+    const MAX_VALUE = 100;
+    const margin = {top:20, right:20, bottom:20, left:40};
+    const innerWidth = SVGWIDTH - margin.left - margin.right;
+    const innerHeight = SVGHEIGHT - margin.top - margin.bottom;
+    const dataset = gererateDataPoints(DATAPOINTS,MAX_VALUE);
+    
+    const yScale = d3.scaleLinear()
+      .domain([0,MAX_VALUE])
+      .rangeRound([innerHeight,10])
+
+    const xScale = d3.scaleBand()
+      .domain(d3.range(dataset.length))
+      .rangeRound([0,innerWidth])
+      .paddingInner(0.05); // padding  between bars in percentage
+
+    const xAxis = d3.axisBottom().scale(xScale);
+    const yAxis = d3.axisLeft().scale(yScale).ticks(5);
+
+    // create SVG
+    const svg = d3.select('.layout')
+      .append('svg')
+      .attr('class','chart')
+      .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+      .attr('width','100%');
+    // define main container and translate it by top and left margin
+    const mainCont = svg.append('g').attr('class','main')
+    mainCont
+      .attr('width',innerWidth)
+      .attr('height',innerHeight)
+      .attr('transform',`translate(${margin.left},${margin.top})`)
+
+    // the function that maps the uniquie keys in the dataset to the DOM elements
+    const keyFunction = (d,i) => d.key; 
+    // draw the bars
+    mainCont.selectAll('rect')
+        .data(dataset,keyFunction)
+        .enter()
+        .append('rect')
+        .classed('bar',true)
+        .attr('height', (d) => innerHeight - yScale(d.value))
+        .attr('y', (d)=>  yScale(d.value))
+        .attr('x',(d,i) => xScale(d.key))
+        .attr('width', (d,i) => xScale.bandwidth());
+    
+    // add labels
+    mainCont.selectAll('text')
+      .data(dataset,keyFunction)
+      .enter()
+      .append('text')
+      .text((d)=>d.value)
+      .attr('x',(d,i) => Math.round(xScale(i) + xScale.bandwidth()/2) )
+      .attr('y',(d,i) => yScale(d.value))
+
+    // create a svg group for axes
+    const bottomAxisCont = svg.append('g').classed('xAxis',true);
+    const leftAxisCont = svg.append('g').classed('yAxis',true);
+    // draw axes with the call function that will call the parameter function
+    bottomAxisCont.call(xAxis).attr('transform',`translate(${margin.left},${margin.top + innerHeight})`);
+    leftAxisCont.call(yAxis).attr('transform',`translate(${margin.left},${margin.top})`);
+
+    // adding the buttons
+    d3.select('.layout')
+      .append('button')
+      .attr('id','add')
+      .text('Add')
+      .attr('class','button')
+      .on('click',clickHandler);
+
+      d3.select('.layout')
+      .append('button')
+      .attr('id','remove')
+      .text('Remove')
+      .attr('class','button')
+      .on('click',clickHandler);
+
+    // helper functions
+    function gererateDataPoints (num_of_points,MAX_VALUE=100) {
+      const result = [];
+      for (let i=0; i < num_of_points; i++) {
+        result.push({key:i,value: Math.ceil(Math.random() * MAX_VALUE) })
+      }
+      return result;
+    }
+
+    function clickHandler () {
+      let updateSelection,textUpdateSelection;
+      switch (this.id) {
+        case 'add':
+          console.log('add');
+          dataset.push({key:dataset.length,value: Math.ceil(Math.random() * MAX_VALUE) });
+
+          updateSelection = mainCont.selectAll('rect')
+            .data(dataset,keyFunction);
+
+          // update the scale with the new number of bands
+          xScale.domain(d3.range(dataset.length));
+
+          // update the axis
+          bottomAxisCont.call(xAxis);
+
+          updateSelection.enter() // grab the enter selection
+            .append('rect')
+            .attr('class','bar')
+            .attr('height', (d) => innerHeight - yScale(d.value))
+            .attr('y', (d) => yScale(d.value))
+            .attr('x',(d) => -xScale.bandwidth())
+            .merge(updateSelection) // merge the update selection with the enter selection so all bars are updated
+            .transition()
+            .duration(400)
+            .attr('x',(d,i) => xScale(i)) // still i as we want to order of the band
+            .attr('width', (d,i) => xScale.bandwidth())
+            ;
+
+          textUpdateSelection = mainCont.selectAll('text').data(dataset,keyFunction);
+          textUpdateSelection.enter()
+            .append('text')
+            .text((d)=>d.value)
+            .attr('x',(d) => -xScale.bandwidth())
+            .attr('y',(d,i) => yScale(d.value))
+            .merge(textUpdateSelection)
+            .transition()
+            .duration(400)
+            .attr('x',(d,i) => Math.round(xScale(i) + xScale.bandwidth()/2) )
+            
+                      
+          break;
+        case 'remove':
+          console.log('remove');
+          dataset.shift();
+          // update the scale with the new number of bands
+          xScale.domain(d3.range(dataset.length));
+
+          updateSelection = mainCont.selectAll('rect')
+            .data(dataset,keyFunction);
+
+            // grab the exit selection
+            updateSelection.exit()
+              .transition()
+              .duration(500)
+              .attr('x',(d)=> -xScale.bandwidth())
+              .remove()
+              .on('end',()=>{
+                // update the axis
+                bottomAxisCont.call(xAxis);
+                
+                // redraw the remaining bars
+                updateSelection
+                  .transition()
+                  .duration(400)
+                  .attr('x',(d,i) => xScale(i))
+                  .attr('width', (d,i) => xScale.bandwidth())
+              })
+          
+          textUpdateSelection = mainCont.selectAll('text').data(dataset,keyFunction);
+          textUpdateSelection.exit()
+              .transition()
+              .duration(500)
+              .attr('x',(d)=> -xScale.bandwidth())
+              .remove()
+              .on('end',()=>{
+                // reposition the remaining labels
+                textUpdateSelection.transition()
+                  .duration(400)
+                  .attr('x',(d,i) => Math.round(xScale(i) + xScale.bandwidth()/2) )
+              })
+          break;
+      }
+    }
+
+
+  </script>
+</body>
+</html>
