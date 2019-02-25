@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Highlighting bars when the mouse is over them. (CSS only)</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
+  <style>
+    .bar:hover {
+      fill: orange;
+      transition: all 0.25s;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <h1>Highlighting bars when the mouse is over them. (CSS only)</h1>
+    <h2>Highlights</h2>
+    <ul>
+      <li>Hovering your mouse over the bars will highligt them in orange. </li>
+      <li>This solution is pure CSS with <em>.bar:hover</em> class </li>
+      <li>For coloring the bars the data values are normalized with a linear scale into the range of [0..255]. That number then fed into the rgb CSS function.</li>
+      <li>The data labels are position either inside or outside of the bars. By default they are placed inside the bars, but if there is not enough space in there they are moved up and they color is changed to black.</li>
+      <li>All text labels has the extra styling <em>.style('pointer-events','none')</em>. This prevents them generate pointer events like mouseover and mouseout so the highlighted state stays on while the mouse is on the label.</li>
+    </ul>
+  </div>
+
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    const SVGHEIGHT = 300;
+    const SVGWIDTH = 600;
+    const DATAPOINTS = 10;
+    const MAX_VALUE = 100;
+    const LABEL_OFFSET = 14; // offset off 
+    const LABEL_FONT_SIZE_PX = 11;
+    const margin = {top:20, right:20, bottom:20, left:40};
+    const innerWidth = SVGWIDTH - margin.left - margin.right;
+    const innerHeight = SVGHEIGHT - margin.top - margin.bottom;
+    const dataset = gererateDataPoints(DATAPOINTS,MAX_VALUE);
+    
+    const yScale = d3.scaleLinear()
+      .domain([0,MAX_VALUE])
+      .rangeRound([innerHeight,10])
+
+    const xScale = d3.scaleBand()
+      .domain(d3.range(dataset.length))
+      .rangeRound([0,innerWidth])
+      .paddingInner(0.05); // padding  between bars in percentage
+
+    const colorScale = d3.scaleLinear().domain([0,MAX_VALUE]).range([0,255]);
+    const xAxis = d3.axisBottom().scale(xScale);
+    const yAxis = d3.axisLeft().scale(yScale).ticks(5);
+
+    // create SVG
+    const svg = d3.select('.layout')
+      .append('svg')
+      .attr('class','chart')
+      .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+      .attr('width','100%');
+    // define main container and translate it by top and left margin
+    const mainCont = svg.append('g').attr('class','main')
+    mainCont
+      .attr('width',innerWidth)
+      .attr('height',innerHeight)
+      .attr('transform',`translate(${margin.left},${margin.top})`)
+
+    // the function that maps the uniquie keys in the dataset to the DOM elements
+    const keyFunction = (d,i) => d.key; 
+    // draw the bars
+    mainCont.selectAll('rect')
+        .data(dataset,keyFunction)
+        .enter()
+        .append('rect')
+        .attr('class','bar')
+        .attr('height', (d) => innerHeight - yScale(d.value))
+        .attr('y', (d)=>  yScale(d.value))
+        .attr('x',(d,i) => xScale(d.key))
+        .attr('fill',(d) => `rgb(0,0,${Math.ceil(colorScale(d.value))})`)
+        .attr('width', (d,i) => xScale.bandwidth());
+    
+    // add labels
+    mainCont.selectAll('text')
+      .data(dataset,keyFunction)
+      .enter()
+      .append('text')
+      .text((d)=>d.value)
+      .style('pointer-events','none')
+      .attr('x',(d,i) => Math.round(xScale(i) + xScale.bandwidth()/2) )
+      .attr('y',(d,i) => {
+         const barHeight = innerHeight - yScale(d.value)
+         let verticalPos = yScale(d.value) + LABEL_OFFSET
+         if (barHeight < LABEL_OFFSET) {
+          verticalPos = yScale(d.value) - LABEL_OFFSET + LABEL_FONT_SIZE_PX // because the label's anchor is on the bottom
+         }
+         
+         return verticalPos
+        })
+      .attr("text-anchor", "middle")
+			   .attr("font-family", "sans-serif")
+			   .attr("font-size", `${LABEL_FONT_SIZE_PX}px`)
+			   .attr("fill", (d) => {
+            const barHeight = innerHeight - yScale(d.value)
+            let color = "white"
+            if (barHeight < LABEL_OFFSET) {
+              color = "black"
+            }
+            return color
+          });
+
+    // create a svg group for axes
+    const bottomAxisCont = svg.append('g').classed('xAxis',true);
+    const leftAxisCont = svg.append('g').classed('yAxis',true);
+    // draw axes with the call function that will call the parameter function
+    bottomAxisCont.call(xAxis).attr('transform',`translate(${margin.left},${margin.top + innerHeight})`);
+    leftAxisCont.call(yAxis).attr('transform',`translate(${margin.left},${margin.top})`);
+
+    
+
+    // helper functions
+    function gererateDataPoints (num_of_points,MAX_VALUE=100) {
+      const result = [];
+      for (let i=0; i < num_of_points; i++) {
+        result.push({key:i,value: Math.ceil(Math.random() * MAX_VALUE) })
+      }
+      return result;
+    }
+
+    
+  </script>
+</body>
+</html>
