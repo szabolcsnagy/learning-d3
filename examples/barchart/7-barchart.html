@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Simple Tooltips</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
+  
+</head>
+<body>
+  <div class="layout">
+    <h1>Simple Tooltips</h1>
+    <p>Sometimes it is better to leave off the labels to reduce clutter on the chart. Tooltips can be helpful to communicate the data values. The most basic tooltips can be achived with SVG <em>title</em> element
+    </p>
+    <h2>Highlights</h2>
+    <ul>
+      <li>The <em>title</em> tag is appended to each <em>rect</em> tag and displayed on hover.</li>
+      <li>Tooltip can be customized in the <em>.text()</em> functions callback.</li>
+    </ul>
+  </div>
+
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    const SVGHEIGHT = 300;
+    const SVGWIDTH = 600;
+    const DATAPOINTS = 10;
+    const MAX_VALUE = 100;
+    const LABEL_OFFSET = 14; // offset off 
+    const LABEL_FONT_SIZE_PX = 11;
+    const margin = {top:20, right:20, bottom:20, left:40};
+    const innerWidth = SVGWIDTH - margin.left - margin.right;
+    const innerHeight = SVGHEIGHT - margin.top - margin.bottom;
+    const dataset = gererateDataPoints(DATAPOINTS,MAX_VALUE);
+    
+    const yScale = d3.scaleLinear()
+      .domain([0,MAX_VALUE])
+      .rangeRound([innerHeight,10])
+
+    const xScale = d3.scaleBand()
+      .domain(d3.range(dataset.length))
+      .rangeRound([0,innerWidth])
+      .paddingInner(0.05); // padding  between bars in percentage
+
+    const colorScale = d3.scaleLinear().domain([0,MAX_VALUE]).range([0,255]);
+    const xAxis = d3.axisBottom().scale(xScale);
+    const yAxis = d3.axisLeft().scale(yScale).ticks(5);
+
+    
+
+    // create SVG
+    const svg = d3.select('.layout')
+      .append('svg')
+      .attr('class','chart')
+      .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+      .attr('width','100%');
+    // define main container and translate it by top and left margin
+    const mainCont = svg.append('g').attr('class','main')
+    mainCont
+      .attr('width',innerWidth)
+      .attr('height',innerHeight)
+      .attr('transform',`translate(${margin.left},${margin.top})`)
+
+    // the function that maps the uniquie keys in the dataset to the DOM elements
+    const keyFunction = (d,i) => d.key; 
+    // draw the bars
+    mainCont.selectAll('rect')
+        .data(dataset,keyFunction)
+        .enter()
+        .append('rect')
+        .attr('class','bar')
+        .attr('height', (d) => innerHeight - yScale(d.value))
+        .attr('y', (d)=>  yScale(d.value))
+        .attr('x',(d,i) => xScale(d.key))
+        .attr('fill',(d) => `rgb(0,0,${Math.ceil(colorScale(d.value))})`)
+        .attr('width', (d,i) => xScale.bandwidth())
+        .on('mouseover',function () {
+          d3.select(this)
+            .transition('fadeIng')
+            .duration(50)
+            .attr('fill','orange')
+        })
+        .on('mouseout', function () {
+          d3.select(this)
+            .transition('fadeIng')
+            .duration(1500)
+            .attr('fill',(d) => `rgb(0,0,${Math.ceil(colorScale(d.value))})`)
+        })
+        .append('title')
+        .text((d)=> `This value is ${d.value}`);
+    
+    
+    // create a svg group for axes
+    const bottomAxisCont = svg.append('g').classed('xAxis',true);
+    const leftAxisCont = svg.append('g').classed('yAxis',true);
+    // draw axes with the call function that will call the parameter function
+    bottomAxisCont.call(xAxis).attr('transform',`translate(${margin.left},${margin.top + innerHeight})`);
+    leftAxisCont.call(yAxis).attr('transform',`translate(${margin.left},${margin.top})`);
+
+   
+
+    // helper functions
+    function gererateDataPoints (num_of_points,MAX_VALUE=100) {
+      const result = [];
+      for (let i=0; i < num_of_points; i++) {
+        result.push({key:i,value: Math.ceil(Math.random() * MAX_VALUE) })
+      }
+      return result;
+    }
+
+    
+
+    
+
+    
+
+  </script>
+</body>
+</html>
