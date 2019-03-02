@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Tooltips with SVG</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
+  
+</head>
+<body>
+  <div class="layout">
+    <h1>Simple Tooltips with SVG text</h1>
+    <p>
+      Use only one <em>text</em> element for tooltip. Create it on mouseover and destroy it on mouse leave.
+    </p>
+    <h2>Highlights</h2>
+    <ul>
+      <li>The mouse over event can also get current datum as an argument. The content of the tooltip will come from the current datum.</li>
+      <li>I use the <em>this</em> object to get a reference to the bar the mouse is currently over. The tooltip position is calculated from the bar's position.</li>
+      <li>The bar's x and y positions are returned to you as strings. Don't forget to convert them back to numbers before they are used in calculations. </li>
+      <li>Also, don't forget to turn off pointer events on the tooltip so when you move the mouse over the they don't caouse a mouseout event for the bars.</li>
+      <li>Tooltip will show outside of the bar if it is not tall enough to house it.</li>
+    </ul>
+  </div>
+
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    const SVGHEIGHT = 300;
+    const SVGWIDTH = 600;
+    const DATAPOINTS = 10;
+    const MAX_VALUE = 100;
+    const LABEL_OFFSET = 14; // offset off 
+    const LABEL_FONT_SIZE_PX = 11;
+    const margin = {top:20, right:20, bottom:20, left:40};
+    const innerWidth = SVGWIDTH - margin.left - margin.right;
+    const innerHeight = SVGHEIGHT - margin.top - margin.bottom;
+    const dataset = gererateDataPoints(DATAPOINTS,MAX_VALUE);
+    
+    const yScale = d3.scaleLinear()
+      .domain([0,MAX_VALUE])
+      .rangeRound([innerHeight,10])
+
+    const xScale = d3.scaleBand()
+      .domain(d3.range(dataset.length))
+      .rangeRound([0,innerWidth])
+      .paddingInner(0.05); // padding  between bars in percentage
+
+    const colorScale = d3.scaleLinear().domain([0,MAX_VALUE]).range([0,255]);
+    const xAxis = d3.axisBottom().scale(xScale);
+    const yAxis = d3.axisLeft().scale(yScale).ticks(5);
+
+    // create SVG
+    const svg = d3.select('.layout')
+      .append('svg')
+      .attr('class','chart')
+      .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+      .attr('width','100%');
+    // define main container and translate it by top and left margin
+    const mainCont = svg.append('g').attr('class','main')
+    mainCont
+      .attr('width',innerWidth)
+      .attr('height',innerHeight)
+      .attr('transform',`translate(${margin.left},${margin.top})`)
+
+    // the function that maps the uniquie keys in the dataset to the DOM elements
+    const keyFunction = (d,i) => d.key; 
+
+    // position for the tooltip
+    let xPosition = 0
+    let yPosition = 0
+    // draw the bars
+    mainCont.selectAll('rect')
+        .data(dataset,keyFunction)
+        .enter()
+        .append('rect')
+        .attr('class','bar')
+        .attr('height', (d) => innerHeight - yScale(d.value))
+        .attr('y', (d)=>  yScale(d.value))
+        .attr('x',(d,i) => xScale(d.key))
+        .attr('fill',(d) => `rgb(0,0,${Math.ceil(colorScale(d.value))})`)
+        .attr('width', (d,i) => xScale.bandwidth())
+        .on('mouseover',function (d) {
+          d3.select(this)
+            .transition('fadeIng')
+            .duration(50)
+            .attr('fill','orange')
+
+          const bar = d3.select(this);
+          const barHeight = bar.attr('height');
+          xPosition = d3.select(this).attr('x')
+          yPosition = parseInt(bar.attr('y')) + LABEL_FONT_SIZE_PX * 1.5
+          
+          // create the tooltip
+          mainCont.append('text')
+            .style('pointer-events','none')
+            .attr('text-anchor','middle')
+            .attr('id','tooltip')
+            .attr('x',parseInt(xPosition) + xScale.bandwidth()/2)
+            .attr('y',barHeight < LABEL_FONT_SIZE_PX * 1.5 ? yPosition - LABEL_FONT_SIZE_PX * 2 :yPosition )
+            .attr('font-size', LABEL_FONT_SIZE_PX)
+            .attr('font-family','sans-serif')
+
+            .text(d.value)
+
+        })
+        .on('mouseout', function () {
+          d3.select(this)
+            .transition('fadeIng')
+            .duration(1500)
+            .attr('fill',(d) => `rgb(0,0,${Math.ceil(colorScale(d.value))})`)
+
+          mainCont.select('#tooltip').remove()
+        });
+    
+    // create a svg group for axes
+    const bottomAxisCont = svg.append('g').classed('xAxis',true);
+    const leftAxisCont = svg.append('g').classed('yAxis',true);
+    // draw axes with the call function that will call the parameter function
+    bottomAxisCont.call(xAxis).attr('transform',`translate(${margin.left},${margin.top + innerHeight})`);
+    leftAxisCont.call(yAxis).attr('transform',`translate(${margin.left},${margin.top})`);
+
+   
+
+    // helper functions
+    function gererateDataPoints (num_of_points,MAX_VALUE=100) {
+      const result = [];
+      for (let i=0; i < num_of_points; i++) {
+        result.push({key:i,value: Math.ceil(Math.random() * MAX_VALUE) })
+      }
+      return result;
+    }
+
+  </script>
+</body>
+</html>
