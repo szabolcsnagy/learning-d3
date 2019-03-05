@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>HTML Tooltips</title>
+  <link rel="stylesheet" href="../../css/styles.css"/>
+  <style>
+    .chart-container{
+      position: relative;
+      padding: 4rem;
+    }
+    #tooltip {
+      position: absolute;
+      pointer-events: none;
+      background-color: white;
+      border: 1px solid black;
+      border-radius: 0.5rem;
+      box-shadow: 2px 2px 5px;
+      min-width: 10rem;
+      min-height: 5rem;
+      padding: 1rem;
+    }
+    .tooptip-header{
+      line-height: 1.5;
+      font-size: 1.25rem;
+      display: block;
+    }
+    .tooltip-value{
+      display: block;
+      font-size: 1rem;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+    <a href="https://github.com/szabolcsnagy/learning-d3/blob/master/examples/barchart/9-barchart.html" class="github-corner" aria-label="View source on GitHub">
+      <svg 
+          width="80" height="80" viewBox="0 0 250 250" 
+          class="octocat"
+          aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+            <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path>
+            <text class="github-text" x="45" y="50" font-size="47" text-anchor="start"> View Source</text>
+          </svg>
+    </a>
+  <div class="layout">
+    <h1>HTML Tooltips</h1>
+    <p>
+      You want to use HTML tooltips with an SVG chart when (a) you want to use CSS features that are not supported by SVG or (b) you want the tooltip to go beyond the border's of the SVG chart.
+    </p>
+    <h2>Highlights</h2>
+    <ul>
+      <li>
+        Place the html tooltip and the SVG chart into the same container and make that container relatively positioned. The tooltip can then be positioned absolutely with that container.
+      </li>
+      <li>In the mouseover handerl <em>d3.mouse(this)</em> will give you the currect coordinates of the mouse pointer in the SVG coordinate system. 
+        Since we want to position an HTML element those SVG coordinates need to transformed into screen coordinates.
+        To transform SVG coordinates into Screen coordinates I created an SVG point in the context of the chart in order to be able to use the DOMMatrix. The DOMMatrix transforms the current element's coordinate system to the coordinate system of the SVG viewport for the SVG document fragment.
+      </li>
+      <li>Finally, since the tooltip's absolute positioing applies within the <em>.chart-container</em> we need to make sure container's position is subtracted from the screen coordinates to make the tooltips position within the container.</li>
+
+
+
+    </ul>
+
+    <div class="chart-container">
+
+    </div>
+  </div>
+
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+    const SVGHEIGHT = 300;
+    const SVGWIDTH = 600;
+    const DATAPOINTS = 10;
+    const MAX_VALUE = 100;
+    const margin = {top:20, right:20, bottom:20, left:40};
+    const innerWidth = SVGWIDTH - margin.left - margin.right;
+    const innerHeight = SVGHEIGHT - margin.top - margin.bottom;
+    const dataset = gererateDataPoints(DATAPOINTS,MAX_VALUE);
+    
+    const yScale = d3.scaleLinear()
+      .domain([0,MAX_VALUE])
+      .rangeRound([innerHeight,10])
+
+    const xScale = d3.scaleBand()
+      .domain(d3.range(dataset.length))
+      .rangeRound([0,innerWidth])
+      .paddingInner(0.05); // padding  between bars in percentage
+
+    const colorScale = d3.scaleLinear().domain([0,MAX_VALUE]).range([0,255]);
+    const xAxis = d3.axisBottom().scale(xScale);
+    const yAxis = d3.axisLeft().scale(yScale).ticks(5);
+    
+    // create SVG
+    const chartContainer = d3.select('.chart-container')
+    const svg = chartContainer
+      .append('svg')
+      .attr('class','chart')
+      .attr('viewBox',`0 0 ${SVGWIDTH} ${SVGHEIGHT}`)
+      .attr('width','100%')
+      
+      .on('mousemove',function(){
+        // d3.mouse will give you the coordinates in SVG coordinates.
+        // but your tooltip in HTML and positioned outside of the SVG
+        const mouse = d3.mouse(this);
+        // so the SVG coordinates need to be converted to screen coordinates
+        const svgDom = d3.select(this).node();
+        const container = d3.select('.chart-container').node();
+        const containerInThePage = container.getBoundingClientRect();
+        
+        // need a point in the SVG coordinate system
+        const svgPoint = svgDom.createSVGPoint();
+        // set our svg point from d3.mouse
+        svgPoint.x = mouse[0];
+        svgPoint.y = mouse[1];
+
+        // break out of the SVG boundaries so we can set coordinates on an HTML element
+        const screenCoord = svgPoint.matrixTransform(svgDom.getScreenCTM());
+
+        tooltip
+          .style('left',(screenCoord.x - containerInThePage.x) + 'px')
+          .style('top',(screenCoord.y - containerInThePage.y  ) + 'px');
+      });
+
+    // add tooltip container
+    const tooltip = d3.select('.chart-container')
+      .append('div')
+      .attr('id','tooltip')
+      .classed('hidden',true)
+
+
+    // define main container and translate it by top and left margin
+    const mainCont = svg.append('g').attr('class','main')
+    mainCont
+      .attr('width',innerWidth)
+      .attr('height',innerHeight)
+      .attr('transform',`translate(${margin.left},${margin.top})`)
+
+    // the function that maps the uniquie keys in the dataset to the DOM elements
+    const keyFunction = (d,i) => d.key; 
+
+    // position for the tooltip
+    let xPosition = 0
+    let yPosition = 0
+    // draw the bars
+    mainCont.selectAll('rect')
+        .data(dataset,keyFunction)
+        .enter()
+        .append('rect')
+        .attr('class','bar')
+        .attr('height', (d) => innerHeight - yScale(d.value))
+        .attr('y', (d)=>  yScale(d.value))
+        .attr('x',(d,i) => xScale(d.key))
+        .attr('fill',(d) => `rgb(0,0,${Math.ceil(colorScale(d.value))})`)
+        .attr('width', (d,i) => xScale.bandwidth())
+        .on('mouseover',function (d,i,a) {
+          d3.select(this)
+            .transition('fadeIng')
+            .duration(50)
+            .attr('fill','orange')
+
+        tooltip
+          .classed('hidden',false)
+          .append('span')
+          .classed('tooptip-header',true)
+          .text('Important Data Header')
+          .append('span')
+            .classed('tooltip-value',true)
+            .text(d.value)
+        })
+        .on('mouseout', function () {
+          d3.select(this)
+            .transition('fadeIng')
+            .duration(1500)
+            .attr('fill',(d) => `rgb(0,0,${Math.ceil(colorScale(d.value))})`)
+          // remove all html from tooptip and hide it.
+          tooltip.html('').classed('hidden',true)
+
+        });
+    
+    // create a svg group for axes
+    const bottomAxisCont = svg.append('g').classed('xAxis',true);
+    const leftAxisCont = svg.append('g').classed('yAxis',true);
+    // draw axes with the call function that will call the parameter function
+    bottomAxisCont.call(xAxis).attr('transform',`translate(${margin.left},${margin.top + innerHeight})`);
+    leftAxisCont.call(yAxis).attr('transform',`translate(${margin.left},${margin.top})`);
+
+   
+
+    // helper functions
+    function gererateDataPoints (num_of_points,MAX_VALUE=100) {
+      const result = [];
+      for (let i=0; i < num_of_points; i++) {
+        result.push({key:i,value: Math.ceil(Math.random() * MAX_VALUE) })
+      }
+      return result;
+    }
+
+  </script>
+</body>
+</html>
